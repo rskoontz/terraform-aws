@@ -2,7 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+.terraform
+variables.tf
 # C extensions
 *.so
 
