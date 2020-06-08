@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .terraform
 variables.tf
+notes.txt
 # C extensions
 *.so
 
