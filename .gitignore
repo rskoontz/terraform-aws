@@ -1,10 +1,12 @@
+#local files
+.terraform
+notes.txt
+variables.tf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-.terraform
-variables.tf
-notes.txt
 # C extensions
 *.so
 
