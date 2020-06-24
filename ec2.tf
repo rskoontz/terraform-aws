@@ -6,27 +6,42 @@ provider "aws" {
 }
 
 resource "aws_instance" "barebones-ec2" {
-  ami = "ami-04e59c05167ea7bd5"
+  ami           = "ami-04e59c05167ea7bd5"
   instance_type = "t2.micro"
-  subnet_id = "subnet-0d3153178b1dfee72"
+  subnet_id     = "subnet-0d3153178b1dfee72"
 }
 
 resource "aws_internet_gateway" "gw" {
   vpc_id = "vpc-0453b2a20efa68c8e"
 }
 
-
 resource "aws_eip" "a1" {
-  vpc    = true
+  vpc = true
 }
 
 output "eip_id" {
   value = aws_eip.a1.id
 }
 
+data "aws_caller_identity" "current" {
+
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 ##output "eip_public_dns" {
 ##  value = aws_eip.a1.public_dns
 ##}
+
+output "aws_caller_info" {
+  value = data.aws_caller_identity.current
+}
+
+output "aws_availability_zones" {
+  value = data.aws_availability_zones.available
+}
 
 resource "aws_s3_bucket" "lab-s3" {
   bucket = "bk-lab-003"
@@ -41,6 +56,6 @@ output "labs3bucket_region" {
 }
 
 resource "aws_eip_association" "eip_assoc" {
-  instance_id    = aws_instance.barebones-ec2.id
-  allocation_id  = aws_eip.a1.id
+  instance_id   = aws_instance.barebones-ec2.id
+  allocation_id = aws_eip.a1.id
 }
