@@ -11,39 +11,35 @@ terraform {
 
 provider "aws" {
   region  = "us-west-1"
+  profile = "tf-ops-lab"
 }
 
 terraform {
   backend "s3" {
-    bucket         = "terraform-state-boblabs"
-    key            = "boblabs/s3/terraform.tfstate"
+    bucket         = "terraform-state-bob-garage"
+    key            = "global/s3/terraform.tfstate"
     region         = "us-west-1"
-    dynamodb_table = "terraform-state-locking"
+    dynamodb_table = "tf-state-lock-table"
     encrypt        = true
   }
 }
 
-data "aws_secretsmanager_secret" "private_key" {
-  name = "tf-boblabs-private"  # The name of the secret in Secrets Manager
-}
-
-data "aws_secretsmanager_secret_version" "private_key_version" {
-  secret_id = data.aws_secretsmanager_secret.private_key.id
-}
-
-output "name" {
-  value = data.aws_secretsmanager_secret_version.private_key_version.secret_string
-  sensitive = true
+data "external" "available_cidr" {
+  program = ["python3", "free_ips.py"]
 }
 
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/24"
-  enable_dns_support   = true
+  cidr_block = data.external.available_cidr.result["cidr_block"]
+  enable_dns_support = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "main-vpc"
+    Name = "DynamicVPC"
   }
+}
+
+output "vpc_cidr" {
+  value = aws_vpc.main.cidr_block
 }
 
 resource "aws_security_group" "deny_all" {
@@ -69,5 +65,16 @@ resource "aws_security_group" "deny_all" {
 
   tags = {
     Name = "deny-all"
+  }
+}
+
+resource "aws_flow_log" "vpc_flow_logs" {
+  log_destination      = "arn:aws:s3:::my-vpc-flow-logs-bucket"
+  log_destination_type = "s3"
+  traffic_type         = "ALL"
+  vpc_id              = aws_vpc.main.id
+
+  tags = {
+    Name = "vpc-flow-logs"
   }
 }
